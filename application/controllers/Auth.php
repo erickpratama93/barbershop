@@ -11,6 +11,12 @@ class Auth extends CI_Controller
 
     public function index()
     {
+
+        if ($this->session->userdata('email')) {
+            redirect('user');
+        }
+
+
         $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email', [
             'required' => 'Email wajib diisi !',
             'valid_email' => 'Email tidak valid !'
@@ -71,6 +77,11 @@ class Auth extends CI_Controller
 
     public function register()
     {
+
+        if ($this->session->userdata('email')) {
+            redirect('user');
+        }
+        
         $this->form_validation->set_rules('name', 'Name', 'required|trim', [
             'required' => 'Nama wajib diisi !'
         ]);
