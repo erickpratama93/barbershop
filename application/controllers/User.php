@@ -87,4 +87,56 @@ class User extends CI_Controller
             redirect('user/profil');
         }
     }
+    public function changePassword()
+    {
+        $data['title'] = 'Change Password';
+        $data['user'] = $this->db->get_where('user', ['email' =>
+        $this->session->userdata('email')])->row_array();
+
+        $this->form_validation->set_rules('passwordLama', 'Password Lama', 'required|trim', [
+            'required' => 'Password lama wajib diisi'
+        ]);
+        $this->form_validation->set_rules('passwordBaru1', 'Password Baru', 'required|trim|min_length[8]|matches[passwordBaru2]', [
+            'required' => 'Password baru wajib diisi !',
+            'min_length' => 'Password terlalu pendek !',
+            'matches' => 'Password tidak sama !'
+        ]);
+        $this->form_validation->set_rules('passwordBaru2', 'Konfirmasi Password Baru', 'required|trim|matches[passwordBaru1]', [
+            'required' => 'Password baru wajib diisi !',
+            'matches' => 'Password tidak sama !'
+        ]);
+
+        if($this->form_validation->run() == false){
+            $this->load->view('templates/header', $data);
+            $this->load->view('templates/sidebar', $data);
+            $this->load->view('templates/topbar', $data);
+            $this->load->view('user/changePassword', $data);
+            $this->load->view('templates/footer');
+        } else {
+            $passwordLama = $this->input->post('passwordLama');
+            $passwordBaru = $this->input->post('passwordBaru1');
+            if(!password_verify($passwordLama, $data['user']['password'])){
+                $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                Password lama salah ! </div>');
+                redirect('user/changePassword');
+            } else {
+                if($passwordLama == $passwordBaru){
+                    $this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">
+                    Password baru tidak boleh sama dengan password lama ! </div>');
+                    redirect('user/changePassword');
+                }else {
+                    // password sudah oke
+                    $password_hash = password_hash($passwordBaru, PASSWORD_DEFAULT);
+
+                    $this->db->set('password', $password_hash);
+                    $this->db->where('email', $this->session->userdata('email'));
+                    $this->db->update('user');
+
+                    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">
+                    Password berhasil diubah ! </div>');
+                    redirect('user/changePassword');
+                }
+            }
+        }
+    }
 }
